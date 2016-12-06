@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script type="text/javascript" src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.js
+"></script>
+    <script type="text/javascript">
+        function get(){
+            $.get('http://{{pi_ip}}:8080/0/action/snapshot');
+        }
+</script>
+</head>
+<body>
+<iframe src="http://{{pi_ip}}:8081"  height="720" width="1280" ></iframe>
+<button type="button" onclick="get()">snapshot</button>
+</body>
+</html>
