@@ -1,21 +1,19 @@
 import RPi.GPIO as GPIO
-import configparser
 from collections import OrderedDict
 
 
 class Car:
     """小车的控制部分，TODO：更多拐弯的方式"""
 
-    def __init__(self):
+    def __init__(self, cf):
         # 这样生成的字典中元素按照插入的顺序排列
         self.out_mapping_port = OrderedDict()
-        self.read_config()
+        self.read_config(cf)
         self.stand_order = ['f_out1', 'f_out2', 'f_out3', 'f_out4']
 
-    def read_config(self):
+    def read_config(self, cf):
         """读取配置文件映射端口"""
-        cf = configparser.ConfigParser()
-        cf.read('config.ini')
+
         if int(cf['front_engine']['out1']) != 0:
             # 读入的配置中，每个section中应该是有序的吧？？？？不然ordereddict也就没用了。
             for key in cf['front_engine']:
