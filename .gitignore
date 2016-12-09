@@ -129,6 +129,8 @@ atlassian-ide-plugin.xml
 
 
 .idea/
+*/.idea/
 # 配置文件
 car/config.ini
 web_server/config.ini
+pc_control/config.ini

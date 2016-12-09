@@ -1,42 +1,62 @@
 import RPi.GPIO as GPIO
 import configparser
-# TODO:最后提取配置
+from collections import OrderedDict
+
+
 class Car:
+    """小车的控制部分，TODO：更多拐弯的方式"""
+
     def __init__(self):
-        self.out_mapping_port = dict()
+        # 这样生成的字典中元素按照插入的顺序排列
+        self.out_mapping_port = OrderedDict()
         self.read_config()
+        self.stand_order = ['f_out1', 'f_out2', 'f_out3', 'f_out4']
 
     def read_config(self):
         """读取配置文件映射端口"""
         cf = configparser.ConfigParser()
         cf.read('config.ini')
         if int(cf['front_engine']['out1']) != 0:
+            # 读入的配置中，每个section中应该是有序的吧？？？？不然ordereddict也就没用了。
             for key in cf['front_engine']:
-                self.out_mapping_port['f_' + key] = int(cf['front_engine'])
+                self.out_mapping_port['f_' + key] = int(cf['front_engine'][key])
         if int(cf['rear_engine']['out1']) != 0:
             for key in cf['rear_engine']:
-                self.out_mapping_port['r_' + key] = int(cf['rear_engine'])
+                self.out_mapping_port['r_' + key] = int(cf['rear_engine'][key])
+        GPIO.cleanup()
+        GPIO.setmode(GPIO.BCM)
+        for key in self.out_mapping_port:
+            GPIO.setup(self.out_mapping_port[key], GPIO.OUT)
 
+    def exec_operation(self, operation):
+        """operation按照二进制位对应r_4,3,2,1 f_4,3,2,1前驱后驱的out端口"""
+        for key in self.out_mapping_port:
+            GPIO.output(self.out_mapping_port[key], operation & 1)
+            operation >>= 1
 
+    def disconnect(self):
+        # 清除针脚的状态，有点类似读写文件时的close
+        GPIO.cleanup()
 
+    # TODO: 是否需要检查下
+    # 下面的相当于是二驱的模式进行控制
+    def forward(self):
+        self.exec_operation(self, 0b01100110)
 
-GPIO.cleanup()
-# 设置模式为BCM模式，在前面的文章中已经说明过几种模式的不同
-GPIO.setmode(GPIO.BCM)
-# 设置26号的模式为输出模式，即系统向26写数据
-GPIO.setup(OUT1_H, GPIO.OUT)
-GPIO.setup(OUT2_H, GPIO.OUT)
-GPIO.setup(OUT3_H, GPIO.OUT)
-GPIO.setup(OUT4_H, GPIO.OUT)
-def move_forward():
+    def back(self):
+        self.exec_operation(self, 0b10011001)
 
-try:
-    # 输出数据1,即置26针脚为高电平
-    GPIO.output(OUT1_H, 0)
-    GPIO.output(OUT2_H, 1)
-    GPIO.output(OUT3_H, 1)
-    GPIO.output(OUT4_H, 0)
+    def stop(self):
+        self.exec_operation(self, 0b00000000)
 
-except KeyboardInterrupt:
-    # 清除针脚的状态，有点类似读写文件时的close
-    GPIO.cleanup()
+    def front_left(self):
+        self.exec_operation(self, 0b00100010)
+
+    def front_right(self):
+        self.exec_operation(self, 0b01000100)
+
+    def back_left(self):
+        self.exec_operation(self, 0b00010001)
+
+    def back_right(self):
+        self.exec_operation(self, 0b10001000)
