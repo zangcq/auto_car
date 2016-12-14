@@ -1,3 +1,4 @@
+#coding:utf8
 """socketserver在小车端，因为要控制小车的运动，是pc向小车发送指令"""
 import os
 from socketserver import BaseRequestHandler, TCPServer
@@ -37,7 +38,12 @@ class ResponseHandler(BaseRequestHandler):
                                 self.request.send(r)
                                 r = fin.read(block_size)
                     else:
-                        my_car.exec_operation(int(operation))
+                        print("cmd", operation)
+                        # fixbug：client发送数据时，多个指令重合
+                        opers = operation.split("_")
+                        for oper in opers:
+                            if oper:
+                                my_car.exec_operation(int(operation))
                 else:
                     print("empty cmd")
                     break
@@ -52,7 +58,8 @@ if __name__ == '__main__':
         cf = read_config()
         my_car = Car(cf)
         cam = CamMotion(cf['cam_server_ip']['ip'], cf['cam_server_ip']['control_port'])
-        server = TCPServer(('', 8000), ResponseHandler)
+        cam.check()
+        server = TCPServer(('', 8001), ResponseHandler)
         server.serve_forever()
     except KeyboardInterrupt:
         my_car.disconnect()

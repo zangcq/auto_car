@@ -1,16 +1,21 @@
 import os.path
 from socket import socket, AF_INET, SOCK_STREAM
+from multiprocessing import Process
 import random
-
 import tornado.httpserver
 import tornado.ioloop
 import tornado.options
 import tornado.web
 import configparser
 from tornado.options import define, options
+import subprocess
 
 define("port", default=8000, help="run on the given port", type=int)
 pi_ip = ''
+darknet_path_root = ''
+# 对应的十进制z34，68，153，0，102
+direction_code = {'forward': 0b01100110, 'backward': 0b10011001, 'left': 0b00100010, 'right': 0b01000100,
+                  'stop': 0b00000000}
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -31,14 +36,15 @@ class CameraHadler(tornado.web.RequestHandler):
 
 class ControlSocket:
     def __init__(self, socket_ip):
+        """"""
         self.socket = socket(AF_INET, SOCK_STREAM)
-        self.socket.connect(socket_ip, 8001)
+        self.socket.connect((socket_ip, 8001))
         self.socket.sendall(bytes('start', "utf-8"))
         self.block_size = 2048
 
     def get_pic(self, file_name):
         """从socket接收到文件，并写入本地文件"""
-        file_size = self.socket.recv(self.block_size)
+        file_size = int(self.socket.recv(self.block_size))
         recv_data_size = 0
         data = b''
         with open(file_name, 'wb') as fout:
@@ -48,16 +54,47 @@ class ControlSocket:
                 recv_data_size += len(data)
                 # print(recv_data_size)
 
-    def work(self):
-        pass
+    def move(self, direction):
+        """发送对应的方向指令给小车"""
+        self.socket.sendall(bytes(str(direction_code[direction])), 'utf8')
+
+
+def control_cmd(input_file):
+    """:return left, right , forward"""
+    # p = os.popen('%s/darknet yolo test %s/tiny-yolo.cfg %stiny-yolo.weights %s' % (
+    #     darknet_path_root, darknet_path_root, darknet_path_root, input_file), 'r')
+    # line = p.readline()
+    # print('direction', line)
+    # return line
+    print('try')
+    p = subprocess.check_output(
+        ["%s/darknet" % darknet_path_root, 'yolo', 'test', '%s/tiny-yolo.cfg' % darknet_path_root,
+         '%stiny-yolo.weights' % darknet_path_root, input_file])
+    p = p.decode('utf8')
+    # p = subprocess.check_output('%s/darknet yolo test %s/tiny-yolo.cfg %stiny-yolo.weights %s' % (
+    # darknet_path_root, darknet_path_root, darknet_path_root, input_file))
+    # p = p.decode('utf8')
+    print(p)
+    return p
+
+
+def socket_work(c_socket):
+    c_socket.get_pic('test.jpg')
+    c_socket.move(control_cmd('test.jpg'))
+
 
 if __name__ == '__main__':
     # 读取配置文件
     cf = configparser.ConfigParser()
     cf.read('config.ini')
     pi_ip = cf['pi_ip']['ip']
+    # darknet的运行目录
+    darknet_path_root = cf['darknet']['darknet_path_root']
 
-
+    c_socket = ControlSocket(pi_ip)
+    # 通过socket控制小车的进程
+    socket_process = Process(target=socket_work, args=(c_socket,))
+    socket_process.start()
 
     tornado.options.parse_command_line()
     app = tornado.web.Application(

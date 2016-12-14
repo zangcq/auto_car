@@ -27,6 +27,10 @@ def init():
             print(recv_data_size)
 
 
+def formulate_operation(oper):
+    """发现bug：socket传输数据的时候，会将发送的数字指令重叠在一起发送，此函数将加入特殊标记，在server端根据这个特殊分隔符处理。"""
+    return "_%d_" % oper
+
 
 def key_monitor():
     dev = InputDevice('/dev/input/event4')
@@ -39,12 +43,12 @@ def key_monitor():
                 elif event.value == 2:
                     print(event.code, "is pressed")
                     # 先测试只有在按住的时候，才发送数据
-                    s.send(bytes(str(key_code[event.code]), "utf-8"))
+                    s.send(bytes(formulate_operation(key_code[event.code]), "utf-8"))
                 else:
                     print(event.code, "is up")
 
 try:
     init()
-    # key_monitor()
+    key_monitor()
 except KeyboardInterrupt:
     s.close()
