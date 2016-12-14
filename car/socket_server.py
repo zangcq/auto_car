@@ -40,10 +40,11 @@ class ResponseHandler(BaseRequestHandler):
                     else:
                         print("cmd", operation)
                         # fixbug：client发送数据时，多个指令重合
-                        opers = operation.split("_")
+                        opers = operation.decode('utf8').split("_")
+                        # print(opers)
                         for oper in opers:
                             if oper:
-                                my_car.exec_operation(int(operation))
+                                my_car.exec_operation(int(oper))
                 else:
                     print("empty cmd")
                     break

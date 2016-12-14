@@ -56,7 +56,9 @@ class ControlSocket:
 
     def move(self, direction):
         """发送对应的方向指令给小车"""
-        self.socket.sendall(bytes(str(direction_code[direction])), 'utf8')
+        print(direction)
+        print(str(direction_code[direction]))
+        self.socket.sendall(bytes(str(direction_code[direction]), 'utf8'))
 
 
 def control_cmd(input_file):
@@ -67,14 +69,16 @@ def control_cmd(input_file):
     # print('direction', line)
     # return line
     print('try')
-    p = subprocess.check_output(
-        ["%s/darknet" % darknet_path_root, 'yolo', 'test', '%s/tiny-yolo.cfg' % darknet_path_root,
-         '%stiny-yolo.weights' % darknet_path_root, input_file])
+    input_args = ["%sdarknet" % darknet_path_root, 'yolo', 'test', '%stiny-yolo.cfg' % darknet_path_root,
+                  '%stiny-yolo.weights' % darknet_path_root, input_file]
+    print(input_args)
+    p = subprocess.check_output(input_args)
     p = p.decode('utf8')
-    # p = subprocess.check_output('%s/darknet yolo test %s/tiny-yolo.cfg %stiny-yolo.weights %s' % (
-    # darknet_path_root, darknet_path_root, darknet_path_root, input_file))
-    # p = p.decode('utf8')
-    print(p)
+    print("cmd ", p)
+
+    # p = subprocess.Popen(input_args, stdout=subprocess.PIPE)
+    # p.wait()
+    # print(p.stdout.read())
     return p
 
 
@@ -96,13 +100,13 @@ if __name__ == '__main__':
     socket_process = Process(target=socket_work, args=(c_socket,))
     socket_process.start()
 
-    tornado.options.parse_command_line()
-    app = tornado.web.Application(
-        handlers=[(r'/', IndexHandler), (r'/cam', CameraHadler)],
-        template_path=os.path.join(os.path.dirname(__file__), "templates"),
-        static_path=os.path.join(os.path.dirname(__file__), "static"),
-        debug=True
-    )
-    http_server = tornado.httpserver.HTTPServer(app)
-    http_server.listen(options.port)
-    tornado.ioloop.IOLoop.instance().start()
+    # tornado.options.parse_command_line()
+    # app = tornado.web.Application(
+    #     handlers=[(r'/', IndexHandler), (r'/cam', CameraHadler)],
+    #     template_path=os.path.join(os.path.dirname(__file__), "templates"),
+    #     static_path=os.path.join(os.path.dirname(__file__), "static"),
+    #     debug=True
+    # )
+    # http_server = tornado.httpserver.HTTPServer(app)
+    # http_server.listen(options.port)
+    # tornado.ioloop.IOLoop.instance().start()

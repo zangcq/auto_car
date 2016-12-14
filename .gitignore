@@ -135,3 +135,7 @@ car/config.ini
 web_server/config.ini
 pc_control/config.ini
 darknet/tiny-yolo.weights
+*/*jpg
+*/*png
+*jpg
+*png
