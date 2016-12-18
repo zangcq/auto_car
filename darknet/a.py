@@ -14,10 +14,8 @@ def control_cmd(input_file):
     #     darknet_path_root, darknet_path_root, darknet_path_root, input_file), 'r')
     # line = p.readline()
     # print('direction', line)
-    print(p)
+    print("cmd", p)
 def work():
 	control_cmd('test.jpg')
 p = Process(target=work)
 p.start()
-for x in range(1,1000):
-    sleep(0.2)

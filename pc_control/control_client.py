@@ -3,10 +3,10 @@ from evdev import InputDevice, categorize, ecodes
 from time import sleep
 import configparser
 
-
 s = socket(AF_INET, SOCK_STREAM)
 # 对应的十进制z34，68，153，0，102
-key_code = {ecodes.KEY_UP: 0b01100110, ecodes.KEY_DOWN: 0b10011001, ecodes.KEY_LEFT:0b00100010, ecodes.KEY_RIGHT:0b01000100, ecodes.KEY_SPACE: 0b00000000}
+key_code = {ecodes.KEY_UP: 0b10010110, ecodes.KEY_DOWN: 0b01101001, ecodes.KEY_LEFT: 0b10100101,
+            ecodes.KEY_RIGHT: 0b01011010, ecodes.KEY_SPACE: 0b00000000, 'left_rotate_90': 0b10100101}
 
 
 def init():
@@ -39,13 +39,22 @@ def key_monitor():
             # print(event.code, event.type, event.value)
             if event.code in [ecodes.KEY_UP, ecodes.KEY_DOWN, ecodes.KEY_LEFT, ecodes.KEY_RIGHT, ecodes.KEY_SPACE]:
                 if event.value == 1:
+                    # 1表示按下
                     print(event.code, 'is down')
+                    if event.code in[ecodes.KEY_LEFT, ecodes.KEY_RIGHT]:
+                        s.send(bytes(formulate_operation(key_code[event.code]), "utf-8"))
+                        sleep(0.15)
+                        s.send(bytes(formulate_operation(key_code[ecodes.KEY_SPACE]), 'utf8'))
                 elif event.value == 2:
+                    # 2表示按住了
                     print(event.code, "is pressed")
+                    if event.code == ecodes.KEY_LEFT or event.code == ecodes.KEY_RIGHT:
+                        pass
                     # 先测试只有在按住的时候，才发送数据
                     s.send(bytes(formulate_operation(key_code[event.code]), "utf-8"))
                 else:
                     print(event.code, "is up")
+
 
 try:
     init()

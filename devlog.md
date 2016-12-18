@@ -21,3 +21,7 @@ https://www.raspberrypi.org/forums/viewtopic.php?t=68247&p=498140
 使用socket传输文件，发现了传输不完整的原因，写篇博客。
 ### December 12, 2016 3:13 PM
 准备添加多进程，来整合socket和webserver
+### December 18, 2016 1:54 PM
+整合完成多进程，同时也整合了队友的darknet。
+现在进一步完善自动控制流程。
+默认转弯的时间是0.15s，转弯度数在60度左右，视地面粗糙程度而定。
