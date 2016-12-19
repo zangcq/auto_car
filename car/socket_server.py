@@ -1,4 +1,4 @@
-#coding:utf8
+# coding:utf8
 """socketserver在小车端，因为要控制小车的运动，是pc向小车发送指令"""
 import os
 from socketserver import BaseRequestHandler, TCPServer
@@ -7,6 +7,7 @@ import configparser
 from cam_motion import CamMotion
 
 block_size = 1024
+
 
 def read_config():
     cf = configparser.ConfigParser()
@@ -18,15 +19,23 @@ class ResponseHandler(BaseRequestHandler):
     global my_car
 
     def handle(self):
+        empty_limit = 100
         # self.request.settimeout(3)
         while True:
             try:
                 # 接收控制指令。与客户端约定好mapping
                 operation = self.request.recv(block_size).strip()
-                # TODO: 嵌入拍照的处理
-                if operation:
-                    print(operation)
-                    if str(operation.decode('utf8')) == 'start':
+                if operation.decode('utf8') == '':
+                    empty_limit -= 1
+                    if empty_limit <= 0:
+                        break
+                    continue
+                print("limt ", empty_limit)
+                opers = filter(None, operation.decode('utf8').split("_"))
+                for oper in opers:
+                    if oper == 'start':
+                        pass
+                    elif oper == 'snapshot':
                         cam.check()
                         send_size = 0
                         file_size = os.path.getsize('/home/pi/motion/lastsnap.jpg')
@@ -37,20 +46,14 @@ class ResponseHandler(BaseRequestHandler):
                             while r:
                                 self.request.send(r)
                                 r = fin.read(block_size)
+                    elif oper:
+                        my_car.exec_operation(int(oper))
                     else:
-                        print("cmd", operation)
-                        # fixbug：client发送数据时，多个指令重合
-                        opers = operation.decode('utf8').split("_")
-                        # print(opers)
-                        for oper in opers:
-                            if oper:
-                                my_car.exec_operation(int(oper))
-                else:
-                    print("empty cmd")
-                    break
+                        pass
             except TimeoutError:
                 print("a client quited")
                 break
+
 
 if __name__ == '__main__':
     server = None

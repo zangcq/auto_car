@@ -29,7 +29,7 @@ class Car:
     def exec_operation(self, operation):
         """operation按照二进制位对应r_4,3,2,1 f_4,3,2,1前驱后驱的out端口"""
         for key in self.out_mapping_port:
-            print(key)
+            # print(key)
             GPIO.output(self.out_mapping_port[key], operation & 1)
             operation >>= 1
 

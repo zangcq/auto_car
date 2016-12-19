@@ -1,6 +1,7 @@
 import requests
 import os
 
+
 class CamMotion:
     def __init__(self, ip, control_port):
         self.ip = ip
